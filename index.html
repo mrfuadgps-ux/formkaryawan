@@ -168,6 +168,23 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
         .btn-secondary:hover { background: #f0f4f8; }
+        .btn-word {
+            background: linear-gradient(135deg, #2b5797, #1e3c72);
+            color: white;
+            padding: 11px 28px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            box-shadow: 0 4px 14px rgba(43,87,151,0.25);
+        }
+        .btn-word:hover { transform: translateY(-1px); background: linear-gradient(135deg, #1e3c72, #0f2a4f); }
 
         /* Modal */
         .modal-overlay {
@@ -241,7 +258,7 @@
         <span id="toast-msg"></span>
     </div>
 
-    <!-- Print Modal -->
+    <!-- Print Modal (PDF) -->
     <div id="printModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-box">
             <div style="width:60px;height:60px;background:linear-gradient(135deg,#1a3c6e,#2d5aa0);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
@@ -273,7 +290,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h1 id="main-title" style="font-size:20px;font-weight:800;color:white;line-height:1.2;">FORM BIODATA CALON KARYAWAN YAYASAN PELITA GLOBAL MANDIRI</h1>
+                        <h1 id="main-title" style="font-size:20px;font-weight:800;color:white;line-height:1.2;">FORM BIODATA CALON KARYAWAN</h1>
                         <p id="company-name" style="font-size:12.5px;color:rgba(255,255,255,0.75);font-weight:500;margin-top:2px;">Lengkapi semua bagian dengan data yang benar dan akurat</p>
                     </div>
                 </div>
@@ -445,11 +462,18 @@
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
+                <!-- Action Buttons - Added Word Download Button -->
                 <div style="display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;">
                     <button type="button" onclick="resetForm()" class="btn-secondary">
                         <svg width="15" height="15" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" /></svg>
                         Reset Form
+                    </button>
+                    <button type="button" onclick="downloadWord()" class="btn-word">
+                        <svg width="15" height="15" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-width="2" d="M4 4h16v16H4zM8 8h8M8 12h6M8 16h4" />
+                            <path stroke="currentColor" stroke-width="2" d="M12 2v4M12 18v4" />
+                        </svg>
+                        Download Word
                     </button>
                     <button type="button" onclick="openPrintModal()" class="btn-primary">
                         <svg width="15" height="15" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M9 14h6M9 18h6" /></svg>
@@ -562,7 +586,6 @@
         function resetForm() {
             if (confirm('Apakah Anda yakin ingin mereset semua data form?')) {
                 document.getElementById('mainForm').reset();
-                // Reset signature
                 if(sigDone) sigDone.style.display = 'none';
                 if(sigPlaceholder) sigPlaceholder.style.display = 'flex';
                 if(sigBox) {
@@ -583,7 +606,7 @@
             document.getElementById('printModal').classList.add('hidden');
         }
 
-        // ---------- Data Collection for Print ----------
+        // ---------- Data Collection for Print & Word ----------
         function getVal(id) {
             const el = document.getElementById(id);
             return el ? (el.value.trim() || '-') : '-';
@@ -595,7 +618,7 @@
             return opt && opt.value ? (opt.text === '-- Pilih --' ? '-' : opt.text) : '-';
         }
 
-        function buildPrintHTML() {
+        function collectFormData() {
             // Pendidikan
             const pendidikan = [
                 { jenjang:'SD', nama: document.querySelector('[name=sd_nama]')?.value||'-', jurusan: document.querySelector('[name=sd_jurusan]')?.value||'-', masuk: document.querySelector('[name=sd_masuk]')?.value||'-', lulus: document.querySelector('[name=sd_lulus]')?.value||'-' },
@@ -631,10 +654,17 @@
                 });
             });
 
+            return { pendidikan, kerjaData, refData };
+        }
+
+        // ---------- PDF Print Function ----------
+        function buildPrintHTML() {
+            const { pendidikan, kerjaData, refData } = collectFormData();
             const companyName = (window.elementSdk?.config?.company_name_label) || '';
             const formTitle = (window.elementSdk?.config?.form_title) || 'FORM BIODATA CALON KARYAWAN';
             const kasusHukum = getSelectLabel('kasus_hukum');
             const kasusJelaskan = (kasusHukum === 'Ya') ? getVal('kasus_penjelasan') : '-';
+            const signatureStatus = document.getElementById('sig-done').style.display === 'flex' ? '✓ Sudah Ditandatangani' : 'Belum Ditandatangani';
 
             return `<!DOCTYPE html>
             <html lang="id">
@@ -682,48 +712,45 @@
                         <h1>${formTitle}</h1>
                         <p>Data yang diisi adalah benar dan dapat dipertanggungjawabkan</p>
                     </div>
-
-                    <!-- A. Data Diri -->
-                    <div class="section"><div class="sec-title">A. DATA DIRI</div><div class="sec-body">
-                        <div class="grid-2">
-                            <div><div class="field-row"><span class="field-label">Nama Lengkap</span><span class="field-colon">:</span><span class="field-value">${getVal('nama_lengkap')}</span></div>
-                            <div class="field-row"><span class="field-label">Tempat Lahir</span><span class="field-colon">:</span><span class="field-value">${getVal('tempat_lahir')}</span></div>
-                            <div class="field-row"><span class="field-label">Tanggal Lahir</span><span class="field-colon">:</span><span class="field-value">${getVal('tanggal_lahir')}</span></div>
-                            <div class="field-row"><span class="field-label">Jenis Kelamin</span><span class="field-colon">:</span><span class="field-value">${getSelectLabel('jenis_kelamin')}</span></div>
-                            <div class="field-row"><span class="field-label">Status Nikah</span><span class="field-colon">:</span><span class="field-value">${getSelectLabel('status_pernikahan')}</span></div>
-                            <div class="field-row"><span class="field-label">Agama</span><span class="field-colon">:</span><span class="field-value">${getSelectLabel('agama')}</span></div></div>
-                            <div><div class="field-row"><span class="field-label">Kewarganegaraan</span><span class="field-colon">:</span><span class="field-value">${getVal('kewarganegaraan')}</span></div>
-                            <div class="field-row"><span class="field-label">Nomor KTP</span><span class="field-colon">:</span><span class="field-value">${getVal('nomor_ktp')}</span></div>
-                            <div class="field-row"><span class="field-label">Nomor HP</span><span class="field-colon">:</span><span class="field-value">${getVal('nomor_hp')}</span></div>
-                            <div class="field-row"><span class="field-label">Email</span><span class="field-colon">:</span><span class="field-value">${getVal('email')}</span></div></div>
-                        </div>
-                        <div class="field-row"><span class="field-label">Alamat</span><span class="field-colon">:</span><span class="field-value">${getVal('alamat')}</span></div>
-                    </div></div>
-
-                    <!-- B. Pendidikan -->
-                    <div class="section"><div class="sec-title">B. RIWAYAT PENDIDIKAN</div><div class="sec-body"><table class="data-table"><thead><tr><th>Jenjang</th><th>Nama Institusi</th><th>Jurusan</th><th>Masuk</th><th>Lulus</th></tr></thead><tbody>${pendidikan.map(p => `<tr><td><strong>${p.jenjang}</strong></td><td>${p.nama}</td><td>${p.jurusan}</td><td>${p.masuk}</td><td>${p.lulus}</td></tr>`).join('')}</tbody></table></div></div>
-
-                    <!-- C. Pengalaman Kerja -->
-                    <div class="section"><div class="sec-title">C. PENGALAMAN KERJA</div><div class="sec-body"><table class="data-table"><thead><tr><th>Perusahaan</th><th>Jabatan</th><th>Masuk</th><th>Keluar</th><th>Alasan</th></tr></thead><tbody>${kerjaData.map(k => `<tr><td>${k.perusahaan}</td><td>${k.jabatan}</td><td>${k.masuk}</td><td>${k.keluar}</td><td>${k.alasan}</td></tr>`).join('')}${kerjaData.length === 0 ? '<tr><td colspan="5" style="text-align:center;">-</td></tr>' : ''}</tbody></table></div></div>
-
-                    <!-- D. Keahlian -->
-                    <div class="section"><div class="sec-title">D. KEAHLIAN</div><div class="sec-body"><div class="field-row"><span class="field-label">Keahlian Utama</span><span class="field-colon">:</span><span class="field-value">${getVal('keahlian_utama')}</span></div><div class="field-row"><span class="field-label">Bahasa</span><span class="field-colon">:</span><span class="field-value">${getVal('kemampuan_bahasa')}</span></div><div class="field-row"><span class="field-label">Komputer</span><span class="field-colon">:</span><span class="field-value">${getVal('kemampuan_komputer')}</span></div><div class="field-row"><span class="field-label">Sertifikasi</span><span class="field-colon">:</span><span class="field-value">${getVal('sertifikasi')}</span></div></div></div>
-
-                    <!-- E. Gaji -->
-                    <div class="section"><div class="sec-title">E. INFORMASI GAJI</div><div class="sec-body"><div class="grid-2"><div><div class="field-row"><span class="field-label">Gaji Terakhir</span><span class="field-colon">:</span><span class="field-value">${getVal('gaji_terakhir')}</span></div><div class="field-row"><span class="field-label">Tunjangan</span><span class="field-colon">:</span><span class="field-value">${getVal('tunjangan')}</span></div></div><div><div class="field-row"><span class="field-label">Gaji Diharapkan</span><span class="field-colon">:</span><span class="field-value">${getVal('gaji_diharapkan')}</span></div></div></div><div class="field-row"><span class="field-label">Alasan Gaji</span><span class="field-colon">:</span><span class="field-value">${getVal('alasan_gaji')}</span></div></div></div>
-
-                    <!-- F. Referensi -->
-                    <div class="section"><div class="sec-title">F. REFERENSI</div><div class="sec-body"><table class="data-table"><thead><tr><th>Nama</th><th>Jabatan</th><th>Perusahaan</th><th>No HP</th><th>Hubungan</th></tr></thead><tbody>${refData.map(r => `<tr><td>${r.nama}</td><td>${r.jabatan}</td><td>${r.perusahaan}</td><td>${r.hp}</td><td>${r.hubungan}</td></tr>`).join('')}</tbody></table></div></div>
-
-                    <!-- G. Informasi Tambahan -->
-                    <div class="section"><div class="sec-title">G. INFORMASI TAMBAHAN</div><div class="sec-body"><div class="field-row"><span class="field-label">Kasus Hukum</span><span class="field-colon">:</span><span class="field-value">${kasusHukum}</span></div>${kasusHukum === 'Ya' ? `<div class="field-row"><span class="field-label">Penjelasan</span><span class="field-colon">:</span><span class="field-value">${kasusJelaskan}</span></div>` : ''}<div class="field-row"><span class="field-label">Bersedia Pindah Unit</span><span class="field-colon">:</span><span class="field-value">${getSelectLabel('bersedia_pindah')}</span></div><div class="field-row"><span class="field-label">Mulai Bekerja</span><span class="field-colon">:</span><span class="field-value">${getVal('mulai_bekerja')}</span></div><div class="field-row"><span class="field-label">Alasan Melamar</span><span class="field-colon">:</span><span class="field-value">${getVal('alasan_melamar')}</span></div></div></div>
-
-                    <!-- H. Pernyataan -->
-                    <div class="section"><div class="sec-title">H. PERNYATAAN</div><div class="sec-body"><div class="stmt-box">"Saya menyatakan bahwa seluruh data yang saya isi adalah benar dan dapat dipertanggungjawabkan. Apabila di kemudian hari ditemukan ketidaksesuaian data, saya bersedia menerima konsekuensi sesuai ketentuan yang berlaku."</div><div class="sig-grid"><div><div class="field-row"><span class="field-label">Tempat</span><span class="field-colon">:</span><span class="field-value">${getVal('tempat_ttd')}</span></div><div class="field-row"><span class="field-label">Tanggal</span><span class="field-colon">:</span><span class="field-value">${getVal('tanggal_ttd')}</span></div></div><div><p style="font-size:9pt;">Yang menyatakan,</p><div class="sig-line"></div><div class="sig-name" style="font-weight:700;">${getVal('signature_name')}</div></div></div></div></div>
+                    ${generatePDFHTMLContent(pendidikan, kerjaData, refData, kasusHukum, kasusJelaskan, signatureStatus)}
                 </div>
                 <script>window.addEventListener('load', () => setTimeout(() => window.print(), 500));<\/script>
             </body>
             </html>`;
+        }
+
+        function generatePDFHTMLContent(pendidikan, kerjaData, refData, kasusHukum, kasusJelaskan, signatureStatus) {
+            return `
+                <div class="section"><div class="sec-title">A. DATA DIRI</div><div class="sec-body">
+                    <div class="grid-2">
+                        <div><div class="field-row"><span class="field-label">Nama Lengkap</span><span class="field-colon">:</span><span class="field-value">${getVal('nama_lengkap')}</span></div>
+                        <div class="field-row"><span class="field-label">Tempat Lahir</span><span class="field-colon">:</span><span class="field-value">${getVal('tempat_lahir')}</span></div>
+                        <div class="field-row"><span class="field-label">Tanggal Lahir</span><span class="field-colon">:</span><span class="field-value">${getVal('tanggal_lahir')}</span></div>
+                        <div class="field-row"><span class="field-label">Jenis Kelamin</span><span class="field-colon">:</span><span class="field-value">${getSelectLabel('jenis_kelamin')}</span></div>
+                        <div class="field-row"><span class="field-label">Status Nikah</span><span class="field-colon">:</span><span class="field-value">${getSelectLabel('status_pernikahan')}</span></div>
+                        <div class="field-row"><span class="field-label">Agama</span><span class="field-colon">:</span><span class="field-value">${getSelectLabel('agama')}</span></div></div>
+                        <div><div class="field-row"><span class="field-label">Kewarganegaraan</span><span class="field-colon">:</span><span class="field-value">${getVal('kewarganegaraan')}</span></div>
+                        <div class="field-row"><span class="field-label">Nomor KTP</span><span class="field-colon">:</span><span class="field-value">${getVal('nomor_ktp')}</span></div>
+                        <div class="field-row"><span class="field-label">Nomor HP</span><span class="field-colon">:</span><span class="field-value">${getVal('nomor_hp')}</span></div>
+                        <div class="field-row"><span class="field-label">Email</span><span class="field-colon">:</span><span class="field-value">${getVal('email')}</span></div></div>
+                    </div>
+                    <div class="field-row"><span class="field-label">Alamat</span><span class="field-colon">:</span><span class="field-value">${getVal('alamat')}</span></div>
+                </div></div>
+
+                <div class="section"><div class="sec-title">B. RIWAYAT PENDIDIKAN</div><div class="sec-body"><table class="data-table"><thead><tr><th>Jenjang</th><th>Nama Institusi</th><th>Jurusan</th><th>Masuk</th><th>Lulus</th></tr></thead><tbody>${pendidikan.map(p => `<tr><td><strong>${p.jenjang}</strong></td><td>${p.nama}</td><td>${p.jurusan}</td><td>${p.masuk}</td><td>${p.lulus}</td></tr>`).join('')}</tbody></table></div></div>
+
+                <div class="section"><div class="sec-title">C. PENGALAMAN KERJA</div><div class="sec-body"><table class="data-table"><thead><tr><th>Perusahaan</th><th>Jabatan</th><th>Masuk</th><th>Keluar</th><th>Alasan</th></tr></thead><tbody>${kerjaData.map(k => `<tr><td>${k.perusahaan}</td><td>${k.jabatan}</td><td>${k.masuk}</td><td>${k.keluar}</td><td>${k.alasan}</td></tr>`).join('')}${kerjaData.length === 0 ? '<tr><td colspan="5" style="text-align:center;">-</td></tr>' : ''}</tbody></table></div></div>
+
+                <div class="section"><div class="sec-title">D. KEAHLIAN</div><div class="sec-body"><div class="field-row"><span class="field-label">Keahlian Utama</span><span class="field-colon">:</span><span class="field-value">${getVal('keahlian_utama')}</span></div><div class="field-row"><span class="field-label">Bahasa</span><span class="field-colon">:</span><span class="field-value">${getVal('kemampuan_bahasa')}</span></div><div class="field-row"><span class="field-label">Komputer</span><span class="field-colon">:</span><span class="field-value">${getVal('kemampuan_komputer')}</span></div><div class="field-row"><span class="field-label">Sertifikasi</span><span class="field-colon">:</span><span class="field-value">${getVal('sertifikasi')}</span></div></div></div>
+
+                <div class="section"><div class="sec-title">E. INFORMASI GAJI</div><div class="sec-body"><div class="grid-2"><div><div class="field-row"><span class="field-label">Gaji Terakhir</span><span class="field-colon">:</span><span class="field-value">${getVal('gaji_terakhir')}</span></div><div class="field-row"><span class="field-label">Tunjangan</span><span class="field-colon">:</span><span class="field-value">${getVal('tunjangan')}</span></div></div><div><div class="field-row"><span class="field-label">Gaji Diharapkan</span><span class="field-colon">:</span><span class="field-value">${getVal('gaji_diharapkan')}</span></div></div></div><div class="field-row"><span class="field-label">Alasan Gaji</span><span class="field-colon">:</span><span class="field-value">${getVal('alasan_gaji')}</span></div></div></div>
+
+                <div class="section"><div class="sec-title">F. REFERENSI</div><div class="sec-body"><table class="data-table"><thead><tr><th>Nama</th><th>Jabatan</th><th>Perusahaan</th><th>No HP</th><th>Hubungan</th></tr></thead><tbody>${refData.map(r => `<tr><td>${r.nama}</td><td>${r.jabatan}</td><td>${r.perusahaan}</td><td>${r.hp}</td><td>${r.hubungan}</td></tr>`).join('')}</tbody></table></div></div>
+
+                <div class="section"><div class="sec-title">G. INFORMASI TAMBAHAN</div><div class="sec-body"><div class="field-row"><span class="field-label">Kasus Hukum</span><span class="field-colon">:</span><span class="field-value">${kasusHukum}</span></div>${kasusHukum === 'Ya' ? `<div class="field-row"><span class="field-label">Penjelasan</span><span class="field-colon">:</span><span class="field-value">${kasusJelaskan}</span></div>` : ''}<div class="field-row"><span class="field-label">Bersedia Pindah Unit</span><span class="field-colon">:</span><span class="field-value">${getSelectLabel('bersedia_pindah')}</span></div><div class="field-row"><span class="field-label">Mulai Bekerja</span><span class="field-colon">:</span><span class="field-value">${getVal('mulai_bekerja')}</span></div><div class="field-row"><span class="field-label">Alasan Melamar</span><span class="field-colon">:</span><span class="field-value">${getVal('alasan_melamar')}</span></div></div></div>
+
+                <div class="section"><div class="sec-title">H. PERNYATAAN</div><div class="sec-body"><div class="stmt-box">"Saya menyatakan bahwa seluruh data yang saya isi adalah benar dan dapat dipertanggungjawabkan. Apabila di kemudian hari ditemukan ketidaksesuaian data, saya bersedia menerima konsekuensi sesuai ketentuan yang berlaku."</div><div class="sig-grid"><div><div class="field-row"><span class="field-label">Tempat</span><span class="field-colon">:</span><span class="field-value">${getVal('tempat_ttd')}</span></div><div class="field-row"><span class="field-label">Tanggal</span><span class="field-colon">:</span><span class="field-value">${getVal('tanggal_ttd')}</span></div></div><div><p style="font-size:9pt;">Yang menyatakan,</p><div class="sig-line"></div><div class="sig-name" style="font-weight:700;">${getVal('signature_name')}</div><div style="font-size:9pt;color:#64748b;margin-top:4px;">${signatureStatus}</div></div></div></div></div>
+            `;
         }
 
         window.executePrint = function() {
@@ -738,7 +765,281 @@
             }
         }
 
-        // SDK Init (optional, but ensures compatibility)
+        // ---------- WORD DOWNLOAD FUNCTION (Auto Download) ----------
+        function downloadWord() {
+            const { pendidikan, kerjaData, refData } = collectFormData();
+            const companyName = (window.elementSdk?.config?.company_name_label) || '';
+            const formTitle = (window.elementSdk?.config?.form_title) || 'FORM BIODATA CALON KARYAWAN';
+            const kasusHukum = getSelectLabel('kasus_hukum');
+            const kasusJelaskan = (kasusHukum === 'Ya') ? getVal('kasus_penjelasan') : '-';
+            const signatureStatus = document.getElementById('sig-done').style.display === 'flex' ? '✓ Sudah Ditandatangani' : 'Belum Ditandatangani';
+            
+            // Generate nama file dengan timestamp
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+            const fileName = `${getVal('nama_lengkap') !== '-' ? getVal('nama_lengkap') : 'Form_Lamaran'}_${timestamp}.doc`;
+            
+            // HTML untuk Word
+            const wordHtml = `<!DOCTYPE html>
+            <html lang="id">
+            <head>
+                <meta charset="UTF-8">
+                <title>${formTitle}</title>
+                <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+                    body {
+                        font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+                        margin: 20px;
+                        padding: 20px;
+                        color: #1e293b;
+                        font-size: 11pt;
+                        line-height: 1.5;
+                    }
+                    .doc-header {
+                        text-align: center;
+                        border-bottom: 3px solid #1a3c6e;
+                        padding-bottom: 15px;
+                        margin-bottom: 25px;
+                    }
+                    .doc-header h1 {
+                        font-size: 20pt;
+                        color: #1a3c6e;
+                        margin: 10px 0 5px;
+                    }
+                    .section {
+                        margin-bottom: 20px;
+                        page-break-inside: avoid;
+                    }
+                    .sec-title {
+                        background: #1a3c6e;
+                        color: white;
+                        padding: 8px 15px;
+                        font-weight: bold;
+                        font-size: 12pt;
+                        margin-bottom: 0;
+                    }
+                    .sec-body {
+                        border: 1px solid #cbd5e1;
+                        border-top: none;
+                        padding: 15px;
+                    }
+                    .field-row {
+                        display: flex;
+                        margin-bottom: 8px;
+                        flex-wrap: wrap;
+                    }
+                    .field-label {
+                        min-width: 180px;
+                        font-weight: 600;
+                        color: #475569;
+                    }
+                    .field-colon {
+                        width: 20px;
+                    }
+                    .field-value {
+                        flex: 1;
+                        border-bottom: 1px dotted #cbd5e1;
+                        padding-bottom: 2px;
+                    }
+                    .data-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 5px;
+                    }
+                    .data-table th, .data-table td {
+                        border: 1px solid #cbd5e1;
+                        padding: 8px;
+                        text-align: left;
+                        vertical-align: top;
+                    }
+                    .data-table th {
+                        background: #f1f5f9;
+                        font-weight: bold;
+                    }
+                    .grid-2 {
+                        display: flex;
+                        gap: 30px;
+                        flex-wrap: wrap;
+                    }
+                    .grid-2 > div {
+                        flex: 1;
+                        min-width: 250px;
+                    }
+                    .stmt-box {
+                        background: #f8fafc;
+                        border: 1px solid #e2e8f0;
+                        border-radius: 8px;
+                        padding: 12px 15px;
+                        margin-bottom: 20px;
+                        font-style: italic;
+                    }
+                    .sig-grid {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-top: 20px;
+                        gap: 40px;
+                        flex-wrap: wrap;
+                    }
+                    .sig-line {
+                        border-bottom: 1.5px solid #1e293b;
+                        height: 60px;
+                        margin-top: 6px;
+                        width: 250px;
+                    }
+                    h3 {
+                        margin: 10px 0;
+                        color: #1a3c6e;
+                    }
+                    hr {
+                        margin: 20px 0;
+                        border: none;
+                        border-top: 1px solid #e2e8f0;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="doc-header">
+                    ${companyName ? `<h2 style="color:#1a3c6e; margin-bottom:5px;">${companyName}</h2>` : ''}
+                    <h1>${formTitle}</h1>
+                    <p><em>Data yang diisi adalah benar dan dapat dipertanggungjawabkan</em></p>
+                </div>
+                
+                ${generateWordHTMLContent(pendidikan, kerjaData, refData, kasusHukum, kasusJelaskan, signatureStatus)}
+                
+                <hr />
+                <p style="font-size:9pt; color:#94a3b8; text-align:center;">Dokumen ini dibuat secara otomatis pada ${new Date().toLocaleString('id-ID')}</p>
+            </body>
+            </html>`;
+            
+            // Download sebagai .doc file
+            const blob = new Blob([wordHtml], { type: 'application/msword' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            showToast('File Word berhasil di download!');
+        }
+
+        function generateWordHTMLContent(pendidikan, kerjaData, refData, kasusHukum, kasusJelaskan, signatureStatus) {
+            return `
+                <div class="section">
+                    <div class="sec-title">A. DATA DIRI</div>
+                    <div class="sec-body">
+                        <div class="grid-2">
+                            <div>
+                                <div class="field-row"><span class="field-label">Nama Lengkap</span><span class="field-colon">:</span><span class="field-value">${getVal('nama_lengkap')}</span></div>
+                                <div class="field-row"><span class="field-label">Tempat Lahir</span><span class="field-colon">:</span><span class="field-value">${getVal('tempat_lahir')}</span></div>
+                                <div class="field-row"><span class="field-label">Tanggal Lahir</span><span class="field-colon">:</span><span class="field-value">${getVal('tanggal_lahir')}</span></div>
+                                <div class="field-row"><span class="field-label">Jenis Kelamin</span><span class="field-colon">:</span><span class="field-value">${getSelectLabel('jenis_kelamin')}</span></div>
+                                <div class="field-row"><span class="field-label">Status Pernikahan</span><span class="field-colon">:</span><span class="field-value">${getSelectLabel('status_pernikahan')}</span></div>
+                                <div class="field-row"><span class="field-label">Agama</span><span class="field-colon">:</span><span class="field-value">${getSelectLabel('agama')}</span></div>
+                            </div>
+                            <div>
+                                <div class="field-row"><span class="field-label">Kewarganegaraan</span><span class="field-colon">:</span><span class="field-value">${getVal('kewarganegaraan')}</span></div>
+                                <div class="field-row"><span class="field-label">Nomor KTP</span><span class="field-colon">:</span><span class="field-value">${getVal('nomor_ktp')}</span></div>
+                                <div class="field-row"><span class="field-label">Nomor HP</span><span class="field-colon">:</span><span class="field-value">${getVal('nomor_hp')}</span></div>
+                                <div class="field-row"><span class="field-label">Email</span><span class="field-colon">:</span><span class="field-value">${getVal('email')}</span></div>
+                            </div>
+                        </div>
+                        <div class="field-row"><span class="field-label">Alamat Domisili</span><span class="field-colon">:</span><span class="field-value">${getVal('alamat')}</span></div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="sec-title">B. RIWAYAT PENDIDIKAN</div>
+                    <div class="sec-body">
+                        <table class="data-table">
+                            <thead><tr><th>Jenjang</th><th>Nama Sekolah / Institusi</th><th>Jurusan</th><th>Tahun Masuk</th><th>Tahun Lulus</th></tr></thead>
+                            <tbody>${pendidikan.map(p => `<tr><td><strong>${p.jenjang}</strong></td><td>${p.nama}</td><td>${p.jurusan}</td><td>${p.masuk}</td><td>${p.lulus}</td></tr>`).join('')}</tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="sec-title">C. PENGALAMAN KERJA</div>
+                    <div class="sec-body">
+                        <table class="data-table">
+                            <thead><tr><th>Nama Perusahaan</th><th>Jabatan</th><th>Tgl Masuk</th><th>Tgl Keluar</th><th>Alasan Resign</th></tr></thead>
+                            <tbody>${kerjaData.map(k => `<tr><td>${k.perusahaan}</td><td>${k.jabatan}</td><td>${k.masuk}</td><td>${k.keluar}</td><td>${k.alasan}</td></tr>`).join('')}${kerjaData.length === 0 ? '<tr><td colspan="5" style="text-align:center;">-</td></tr>' : ''}</tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="sec-title">D. KEAHLIAN &amp; KOMPETENSI</div>
+                    <div class="sec-body">
+                        <div class="field-row"><span class="field-label">Keahlian Utama</span><span class="field-colon">:</span><span class="field-value">${getVal('keahlian_utama')}</span></div>
+                        <div class="field-row"><span class="field-label">Kemampuan Bahasa</span><span class="field-colon">:</span><span class="field-value">${getVal('kemampuan_bahasa')}</span></div>
+                        <div class="field-row"><span class="field-label">Kemampuan Komputer</span><span class="field-colon">:</span><span class="field-value">${getVal('kemampuan_komputer')}</span></div>
+                        <div class="field-row"><span class="field-label">Sertifikasi</span><span class="field-colon">:</span><span class="field-value">${getVal('sertifikasi')}</span></div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="sec-title">E. INFORMASI GAJI</div>
+                    <div class="sec-body">
+                        <div class="grid-2">
+                            <div>
+                                <div class="field-row"><span class="field-label">Gaji Terakhir</span><span class="field-colon">:</span><span class="field-value">${getVal('gaji_terakhir')}</span></div>
+                                <div class="field-row"><span class="field-label">Tunjangan Diterima</span><span class="field-colon">:</span><span class="field-value">${getVal('tunjangan')}</span></div>
+                            </div>
+                            <div>
+                                <div class="field-row"><span class="field-label">Gaji Diharapkan</span><span class="field-colon">:</span><span class="field-value">${getVal('gaji_diharapkan')}</span></div>
+                            </div>
+                        </div>
+                        <div class="field-row"><span class="field-label">Alasan Mengajukan Gaji</span><span class="field-colon">:</span><span class="field-value">${getVal('alasan_gaji')}</span></div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="sec-title">F. REFERENSI / REKOMENDASI</div>
+                    <div class="sec-body">
+                        <table class="data-table">
+                            <thead><tr><th>Nama</th><th>Jabatan</th><th>Perusahaan / Instansi</th><th>No. HP</th><th>Hubungan</th></tr></thead>
+                            <tbody>${refData.map(r => `<tr><td>${r.nama}</td><td>${r.jabatan}</td><td>${r.perusahaan}</td><td>${r.hp}</td><td>${r.hubungan}</td></tr>`).join('')}</tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="sec-title">G. INFORMASI TAMBAHAN</div>
+                    <div class="sec-body">
+                        <div class="field-row"><span class="field-label">Pernah kasus hukum?</span><span class="field-colon">:</span><span class="field-value">${kasusHukum}</span></div>
+                        ${kasusHukum === 'Ya' ? `<div class="field-row"><span class="field-label">Penjelasan kasus</span><span class="field-colon">:</span><span class="field-value">${kasusJelaskan}</span></div>` : ''}
+                        <div class="field-row"><span class="field-label">Bersedia pindah unit</span><span class="field-colon">:</span><span class="field-value">${getSelectLabel('bersedia_pindah')}</span></div>
+                        <div class="field-row"><span class="field-label">Dapat mulai bekerja</span><span class="field-colon">:</span><span class="field-value">${getVal('mulai_bekerja')}</span></div>
+                        <div class="field-row"><span class="field-label">Alasan melamar</span><span class="field-colon">:</span><span class="field-value">${getVal('alasan_melamar')}</span></div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="sec-title">H. PERNYATAAN</div>
+                    <div class="sec-body">
+                        <div class="stmt-box">
+                            "Saya menyatakan bahwa seluruh data yang saya isi adalah benar dan dapat dipertanggungjawabkan. Apabila di kemudian hari ditemukan ketidaksesuaian data, saya bersedia menerima konsekuensi sesuai ketentuan yang berlaku."
+                        </div>
+                        <div class="sig-grid">
+                            <div>
+                                <div class="field-row"><span class="field-label">Tempat</span><span class="field-colon">:</span><span class="field-value">${getVal('tempat_ttd')}</span></div>
+                                <div class="field-row"><span class="field-label">Tanggal</span><span class="field-colon">:</span><span class="field-value">${getVal('tanggal_ttd')}</span></div>
+                            </div>
+                            <div>
+                                <p style="margin-bottom:5px;">Yang menyatakan,</p>
+                                <div class="sig-line"></div>
+                                <div style="font-weight:bold; margin-top:5px;">${getVal('signature_name')}</div>
+                                <div style="font-size:9pt; color:#64748b;">${signatureStatus}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SDK Init
         window.elementSdk && window.elementSdk.init({
             defaultConfig: { company_name_label: '', form_title: 'FORM BIODATA CALON KARYAWAN', font_family: 'Plus Jakarta Sans' },
             onConfigChange: (cfg) => {
@@ -746,6 +1047,7 @@
                 if(document.getElementById('company-name')) document.getElementById('company-name').innerText = cfg.company_name_label || 'Lengkapi semua bagian dengan data yang benar dan akurat';
             }
         });
+        
         updateProgress();
     </script>
 </body>

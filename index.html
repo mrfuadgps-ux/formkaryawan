@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Lamaran Kerja | Aplikasi Karyawan</title>
+    <script src="/_sdk/element_sdk.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #f0f4f8;
+            margin: 0;
+            padding: 0;
+        }
+        :root {
+            --primary: #1a3c6e;
+            --accent: #e8b84b;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --muted: #64748b;
+            --border: #cbd5e1;
+            --danger: #ef4444;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+
+        /* Form Styles */
+        .form-input {
+            width: 100%;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            padding: 9px 12px;
+            font-size: 13.5px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text);
+            background: #f8fafc;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .form-input:focus {
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(26,60,110,0.1);
+        }
+        .form-input::placeholder { color: #b0bec5; }
+
+        select.form-input { cursor: pointer; }
+        textarea.form-input { resize: vertical; min-height: 70px; }
+
+        .section-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #2d5aa0 100%);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 10px 10px 0 0;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-body {
+            background: white;
+            border: 1.5px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            padding: 20px;
+        }
+
+        .label-text {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--muted);
+            margin-bottom: 5px;
+            display: block;
+            letter-spacing: 0.3px;
+        }
+        .required::after { content: ' *'; color: var(--danger); }
+
+        /* Table styles */
+        .form-table { width: 100%; border-collapse: collapse; }
+        .form-table th {
+            background: #f1f5f9;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            padding: 10px 10px;
+            border: 1.5px solid #e2e8f0;
+            text-align: left;
+        }
+        .form-table td {
+            border: 1.5px solid #e2e8f0;
+            padding: 6px 6px;
+            vertical-align: middle;
+        }
+        .form-table tr:nth-child(even) td { background: #fafbfc; }
+        .form-table .form-input {
+            border: none;
+            background: transparent;
+            padding: 6px 8px;
+            border-radius: 6px;
+        }
+        .form-table .form-input:focus {
+            background: #fff;
+            box-shadow: 0 0 0 2px rgba(26,60,110,0.15);
+        }
+
+        /* Progress bar */
+        .progress-bar { transition: width 0.4s ease; }
+
+        /* Signature area */
+        .signature-box {
+            border: 2px dashed var(--border);
+            border-radius: 10px;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #b0bec5;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+            background: #fff;
+        }
+        .signature-box:hover { border-color: var(--primary); background: #f8fafc; }
+
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #2d5aa0);
+            color: white;
+            padding: 11px 28px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            box-shadow: 0 4px 14px rgba(26,60,110,0.25);
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,60,110,0.35); }
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            padding: 11px 24px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            border: 2px solid var(--primary);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .btn-secondary:hover { background: #f0f4f8; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(3px);
+        }
+        .modal-box {
+            background: white;
+            border-radius: 16px;
+            padding: 36px;
+            max-width: 480px;
+            width: 92%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            text-align: center;
+        }
+        .hidden { display: none !important; }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transform: translateY(80px);
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        /* Header */
+        .app-header {
+            background: linear-gradient(135deg, #1a3c6e 0%, #2d5aa0 50%, #1a3c6e 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .app-header::before {
+            content: '';
+            position: absolute;
+            top: -40%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: rgba(232,184,75,0.1);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="h-full">
+    <!-- Toast -->
+    <div id="toast" class="toast" role="alert" aria-live="polite">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M5 13l4 4L19 7" />
+        </svg>
+        <span id="toast-msg"></span>
+    </div>
+
+    <!-- Print Modal -->
+    <div id="printModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-box">
+            <div style="width:60px;height:60px;background:linear-gradient(135deg,#1a3c6e,#2d5aa0);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                <svg width="28" height="28" fill="none" viewBox="0 0 24 24">
+                    <path stroke="white" stroke-width="2" stroke-linecap="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M9 14h6M9 18h6" />
+                </svg>
+            </div>
+            <h2 id="modalTitle" style="font-size:18px;font-weight:800;color:#1e293b;margin-bottom:8px;">Cetak / Download PDF</h2>
+            <p style="font-size:13px;color:#64748b;margin-bottom:24px;line-height:1.6;">Form biodata akan dibuka di jendela baru. Gunakan <strong>Ctrl+P</strong> atau tombol Print di browser, lalu pilih <strong>"Save as PDF"</strong> untuk mengunduh.</p>
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                <button onclick="executePrint()" class="btn-primary">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M9 14h6M9 18h6" />
+                    </svg> Buka &amp; Cetak
+                </button>
+                <button onclick="closePrintModal()" class="btn-secondary">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="h-full w-full overflow-auto" style="background:#f0f4f8;">
+        <!-- Header -->
+        <header class="app-header w-full">
+            <div style="max-width:860px;margin:0 auto;padding:28px 24px 24px;position:relative;z-index:1;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+                    <div style="width:40px;height:40px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+                            <path stroke="#1a3c6e" stroke-width="2.2" stroke-linecap="round" d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 id="main-title" style="font-size:20px;font-weight:800;color:white;line-height:1.2;">FORM BIODATA CALON KARYAWAN YAYASAN PELITA GLOBAL MANDIRI</h1>
+                        <p id="company-name" style="font-size:12.5px;color:rgba(255,255,255,0.75);font-weight:500;margin-top:2px;">Lengkapi semua bagian dengan data yang benar dan akurat</p>
+                    </div>
+                </div>
+                <!-- Progress -->
+                <div style="margin-top:18px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                        <span style="font-size:11.5px;color:rgba(255,255,255,0.7);font-weight:600;">Kelengkapan Form</span>
+                        <span id="progress-text" style="font-size:11.5px;color:var(--accent);font-weight:700;">0%</span>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.15);border-radius:99px;height:6px;overflow:hidden;">
+                        <div id="progress-bar" class="progress-bar" style="height:100%;background:linear-gradient(90deg,var(--accent),#f5d06b);border-radius:99px;width:0%;"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Form -->
+        <main style="max-width:860px;margin:0 auto;padding:24px 16px 40px;">
+            <form id="mainForm" onsubmit="return false;">
+                <!-- A. Data Diri -->
+                <div style="margin-bottom:20px;">
+                    <div class="section-header"><span style="background:var(--accent);color:var(--primary);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">A</span> DATA DIRI</div>
+                    <div class="section-body">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                            <div style="grid-column:1/-1;"><label class="label-text required" for="nama_lengkap">Nama Lengkap</label> <input class="form-input" type="text" id="nama_lengkap" name="nama_lengkap" placeholder="Sesuai KTP"></div>
+                            <div><label class="label-text required" for="tempat_lahir">Tempat Lahir</label> <input class="form-input" type="text" id="tempat_lahir" name="tempat_lahir" placeholder="Kota kelahiran"></div>
+                            <div><label class="label-text required" for="tanggal_lahir">Tanggal Lahir</label> <input class="form-input" type="date" id="tanggal_lahir" name="tanggal_lahir"></div>
+                            <div><label class="label-text required" for="jenis_kelamin">Jenis Kelamin</label> <select class="form-input" id="jenis_kelamin" name="jenis_kelamin"><option value="">-- Pilih --</option><option>Laki-laki</option><option>Perempuan</option></select></div>
+                            <div><label class="label-text required" for="status_pernikahan">Status Pernikahan</label> <select class="form-input" id="status_pernikahan" name="status_pernikahan"><option value="">-- Pilih --</option><option>Belum Menikah</option><option>Menikah</option><option>Duda/Janda</option></select></div>
+                            <div style="grid-column:1/-1;"><label class="label-text required" for="alamat">Alamat Domisili</label> <textarea class="form-input" id="alamat" name="alamat" rows="2" placeholder="Jalan, RT/RW, Kelurahan, Kecamatan, Kota, Provinsi"></textarea></div>
+                            <div><label class="label-text required" for="nomor_hp">Nomor HP / WhatsApp</label> <input class="form-input" type="tel" id="nomor_hp" name="nomor_hp" placeholder="08xxxxxxxxxx"></div>
+                            <div><label class="label-text required" for="email">Email</label> <input class="form-input" type="email" id="email" name="email" placeholder="nama@email.com"></div>
+                            <div><label class="label-text" for="agama">Agama</label> <select class="form-input" id="agama" name="agama"><option value="">-- Pilih --</option><option>Islam</option><option>Kristen Protestan</option><option>Kristen Katolik</option><option>Hindu</option><option>Buddha</option><option>Konghucu</option><option>Lainnya</option></select></div>
+                            <div><label class="label-text" for="kewarganegaraan">Kewarganegaraan</label> <input class="form-input" type="text" id="kewarganegaraan" name="kewarganegaraan" value="Indonesia"></div>
+                            <div style="grid-column:1/-1;"><label class="label-text required" for="nomor_ktp">Nomor KTP</label> <input class="form-input" type="text" id="nomor_ktp" name="nomor_ktp" maxlength="16" placeholder="16 digit nomor KTP"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- B. Riwayat Pendidikan -->
+                <div style="margin-bottom:20px;">
+                    <div class="section-header"><span style="background:var(--accent);color:var(--primary);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">B</span> RIWAYAT PENDIDIKAN <span style="font-weight:400;font-size:11px;opacity:0.8;">(dari SD hingga pendidikan terakhir)</span></div>
+                    <div class="section-body" style="overflow-x:auto;padding:0;">
+                        <table class="form-table">
+                            <thead><tr><th style="width:90px;">Jenjang</th><th>Nama Sekolah / Institusi</th><th>Jurusan</th><th style="width:100px;">Tahun Masuk</th><th style="width:100px;">Tahun Lulus</th></tr></thead>
+                            <tbody>
+                                <tr><td style="font-weight:600;font-size:12.5px;padding:8px 10px;">SD</td><td><input class="form-input" type="text" name="sd_nama" placeholder="Nama sekolah"></td><td><input class="form-input" type="text" name="sd_jurusan" value="-"></td><td><input class="form-input" type="text" name="sd_masuk" placeholder="Tahun"></td><td><input class="form-input" type="text" name="sd_lulus" placeholder="Tahun"></td></tr>
+                                <tr><td style="font-weight:600;font-size:12.5px;padding:8px 10px;">SMP</td><td><input class="form-input" type="text" name="smp_nama" placeholder="Nama sekolah"></td><td><input class="form-input" type="text" name="smp_jurusan" value="-"></td><td><input class="form-input" type="text" name="smp_masuk" placeholder="Tahun"></td><td><input class="form-input" type="text" name="smp_lulus" placeholder="Tahun"></td></tr>
+                                <tr><td style="font-weight:600;font-size:12.5px;padding:8px 10px;">SMA/SMK</td><td><input class="form-input" type="text" name="sma_nama" placeholder="Nama sekolah"></td><td><input class="form-input" type="text" name="sma_jurusan" placeholder="Jurusan"></td><td><input class="form-input" type="text" name="sma_masuk" placeholder="Tahun"></td><td><input class="form-input" type="text" name="sma_lulus" placeholder="Tahun"></td></tr>
+                                <tr><td style="font-weight:600;font-size:12.5px;padding:8px 10px;">D3/S1</td><td><input class="form-input" type="text" name="d3s1_nama" placeholder="Nama institusi"></td><td><input class="form-input" type="text" name="d3s1_jurusan" placeholder="Jurusan"></td><td><input class="form-input" type="text" name="d3s1_masuk" placeholder="Tahun"></td><td><input class="form-input" type="text" name="d3s1_lulus" placeholder="Tahun"></td></tr>
+                                <tr><td style="font-weight:600;font-size:12.5px;padding:8px 10px;">S2/S3</td><td><input class="form-input" type="text" name="s2_nama" placeholder="Nama institusi"></td><td><input class="form-input" type="text" name="s2_jurusan" placeholder="Jurusan"></td><td><input class="form-input" type="text" name="s2_masuk" placeholder="Tahun"></td><td><input class="form-input" type="text" name="s2_lulus" placeholder="Tahun"></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- C. Pengalaman Kerja -->
+                <div style="margin-bottom:20px;">
+                    <div class="section-header"><span style="background:var(--accent);color:var(--primary);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">C</span> PENGALAMAN KERJA <span style="font-weight:400;font-size:11px;opacity:0.8;">(terbaru ke terlama)</span></div>
+                    <div class="section-body" style="overflow-x:auto;padding:0;">
+                        <table class="form-table" id="kerja-table">
+                            <thead><tr><th>Nama Perusahaan</th><th>Jabatan</th><th style="width:110px;">Tgl Masuk</th><th style="width:110px;">Tgl Keluar</th><th>Alasan Resign</th><th style="width:40px;"></th></tr></thead>
+                            <tbody id="kerja-body">
+                                <tr data-row="kerja">
+                                    <td><input class="form-input" type="text" name="kerja_perusahaan[]" placeholder="Nama perusahaan"></td>
+                                    <td><input class="form-input" type="text" name="kerja_jabatan[]" placeholder="Jabatan"></td>
+                                    <td><input class="form-input" type="month" name="kerja_masuk[]"></td>
+                                    <td><input class="form-input" type="month" name="kerja_keluar[]"></td>
+                                    <td><input class="form-input" type="text" name="kerja_alasan[]" placeholder="Alasan keluar"></td>
+                                    <td style="text-align:center;"><button type="button" onclick="removeRow(this,'kerja-body')" style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:16px;padding:4px;" title="Hapus baris">✕</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div style="padding:12px 16px;"><button type="button" onclick="addKerjaRow()" style="background:#f0f4f8;border:1.5px dashed #94a3b8;color:#475569;padding:7px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;">+ Tambah Pengalaman Kerja</button></div>
+                    </div>
+                </div>
+
+                <!-- D. Keahlian -->
+                <div style="margin-bottom:20px;">
+                    <div class="section-header"><span style="background:var(--accent);color:var(--primary);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">D</span> KEAHLIAN &amp; KOMPETENSI</div>
+                    <div class="section-body">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                            <div style="grid-column:1/-1;"><label class="label-text" for="keahlian_utama">Keahlian Utama</label> <textarea class="form-input" id="keahlian_utama" name="keahlian_utama" rows="2" placeholder="Contoh: Manajemen proyek, Analisis data, Desain grafis, dll."></textarea></div>
+                            <div><label class="label-text" for="kemampuan_bahasa">Kemampuan Bahasa</label> <textarea class="form-input" id="kemampuan_bahasa" name="kemampuan_bahasa" rows="2" placeholder="Contoh: Indonesia (aktif), Inggris (pasif)"></textarea></div>
+                            <div><label class="label-text" for="kemampuan_komputer">Kemampuan Komputer</label> <textarea class="form-input" id="kemampuan_komputer" name="kemampuan_komputer" rows="2" placeholder="Contoh: MS Office, AutoCAD, Photoshop"></textarea></div>
+                            <div style="grid-column:1/-1;"><label class="label-text" for="sertifikasi">Sertifikasi (jika ada)</label> <textarea class="form-input" id="sertifikasi" name="sertifikasi" rows="2" placeholder="Nama sertifikat, lembaga penerbit, tahun"></textarea></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- E. Informasi Gaji -->
+                <div style="margin-bottom:20px;">
+                    <div class="section-header"><span style="background:var(--accent);color:var(--primary);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">E</span> INFORMASI GAJI</div>
+                    <div class="section-body">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                            <div><label class="label-text" for="gaji_terakhir">Gaji Terakhir</label> <input class="form-input" type="text" id="gaji_terakhir" name="gaji_terakhir" placeholder="Rp 0"></div>
+                            <div><label class="label-text" for="tunjangan">Tunjangan yang Diterima</label> <input class="form-input" type="text" id="tunjangan" name="tunjangan" placeholder="Contoh: BPJS, makan, transport"></div>
+                            <div><label class="label-text required" for="gaji_diharapkan">Gaji yang Diharapkan</label> <input class="form-input" type="text" id="gaji_diharapkan" name="gaji_diharapkan" placeholder="Rp 0"></div>
+                            <div><label class="label-text" for="alasan_gaji">Alasan Mengajukan Gaji Tersebut</label> <textarea class="form-input" id="alasan_gaji" name="alasan_gaji" rows="2" placeholder="Jelaskan dasar pengajuan gaji Anda"></textarea></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- F. Referensi -->
+                <div style="margin-bottom:20px;">
+                    <div class="section-header"><span style="background:var(--accent);color:var(--primary);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">F</span> REFERENSI / REKOMENDASI <span style="font-weight:400;font-size:11px;opacity:0.8;">(min. 1 orang, bukan keluarga)</span></div>
+                    <div class="section-body" style="overflow-x:auto;padding:0;">
+                        <table class="form-table">
+                            <thead><tr><th>Nama</th><th>Jabatan</th><th>Perusahaan / Instansi</th><th style="width:130px;">No. HP</th><th>Hubungan</th><th style="width:40px;"></th></tr></thead>
+                            <tbody id="ref-body">
+                                <tr data-row="ref">
+                                    <td><input class="form-input" type="text" name="ref_nama[]" placeholder="Nama"></td>
+                                    <td><input class="form-input" type="text" name="ref_jabatan[]" placeholder="Jabatan"></td>
+                                    <td><input class="form-input" type="text" name="ref_perusahaan[]" placeholder="Perusahaan"></td>
+                                    <td><input class="form-input" type="tel" name="ref_hp[]" placeholder="08xxxxxxxx"></td>
+                                    <td><input class="form-input" type="text" name="ref_hubungan[]" placeholder="Rekan kerja, dll"></td>
+                                    <td style="text-align:center;"><button type="button" onclick="removeRow(this,'ref-body')" style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:16px;padding:4px;">✕</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div style="padding:12px 16px;"><button type="button" onclick="addRefRow()" style="background:#f0f4f8;border:1.5px dashed #94a3b8;color:#475569;padding:7px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;">+ Tambah Referensi</button></div>
+                    </div>
+                </div>
+
+                <!-- G. Informasi Tambahan -->
+                <div style="margin-bottom:20px;">
+                    <div class="section-header"><span style="background:var(--accent);color:var(--primary);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">G</span> INFORMASI TAMBAHAN</div>
+                    <div class="section-body">
+                        <div style="display:grid;gap:14px;">
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                                <div><label class="label-text required" for="kasus_hukum">Pernah terlibat kasus hukum?</label> <select class="form-input" id="kasus_hukum" name="kasus_hukum" onchange="toggleKasusHukum(this)"><option value="">-- Pilih --</option><option value="tidak">Tidak</option><option value="ya">Ya</option></select></div>
+                                <div><label class="label-text required" for="bersedia_pindah">Bersedia ditempatkan di unit lain?</label> <select class="form-input" id="bersedia_pindah" name="bersedia_pindah"><option value="">-- Pilih --</option><option value="ya">Ya</option><option value="tidak">Tidak</option></select></div>
+                            </div>
+                            <div id="kasus-detail" style="display:none;"><label class="label-text" for="kasus_penjelasan">Jika ya, jelaskan:</label> <textarea class="form-input" id="kasus_penjelasan" name="kasus_penjelasan" rows="2" placeholder="Jelaskan kasus yang pernah terjadi..."></textarea></div>
+                            <div><label class="label-text required" for="mulai_bekerja">Dapat mulai bekerja</label> <input class="form-input" type="date" id="mulai_bekerja" name="mulai_bekerja"></div>
+                            <div><label class="label-text required" for="alasan_melamar">Alasan melamar di instansi ini</label> <textarea class="form-input" id="alasan_melamar" name="alasan_melamar" rows="3" placeholder="Jelaskan motivasi Anda melamar di sini..."></textarea></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- H. Pernyataan -->
+                <div style="margin-bottom:28px;">
+                    <div class="section-header"><span style="background:var(--accent);color:var(--primary);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">H</span> PERNYATAAN</div>
+                    <div class="section-body">
+                        <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:20px;">
+                            <p style="font-size:13px;color:#475569;line-height:1.7;font-style:italic;">"Saya menyatakan bahwa seluruh data yang saya isi adalah benar dan dapat dipertanggungjawabkan. Apabila di kemudian hari ditemukan ketidaksesuaian data, saya bersedia menerima konsekuensi sesuai ketentuan yang berlaku."</p>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                            <div><label class="label-text required" for="tempat_ttd">Tempat</label> <input class="form-input" type="text" id="tempat_ttd" name="tempat_ttd" placeholder="Kota penandatanganan"></div>
+                            <div><label class="label-text required" for="tanggal_ttd">Tanggal</label> <input class="form-input" type="date" id="tanggal_ttd" name="tanggal_ttd"></div>
+                            <div><label class="label-text" for="signature_name">Nama Terang</label> <input class="form-input" type="text" id="signature_name" name="signature_name" placeholder="Nama lengkap"></div>
+                            <div><label class="label-text" style="display:block;margin-bottom:5px;">Tanda Tangan</label>
+                                <div class="signature-box" id="sigBox" title="Klik untuk menandai sudah ditandatangani">
+                                    <span id="sig-placeholder" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" opacity="0.4"><path stroke="currentColor" stroke-width="2" d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
+                                        <span>Tanda tangan di sini (fisik)</span>
+                                    </span>
+                                    <span id="sig-done" style="display:none;flex-direction:column;align-items:center;gap:4px;color:#1a3c6e;">
+                                        <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="#1a3c6e" stroke-width="2.5" stroke-linecap="round" d="M5 13l4 4L19 7" /></svg>
+                                        <span style="font-weight:700;font-size:12px;">Sudah Ditandatangani</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-top:16px;display:flex;align-items:flex-start;gap:10px;">
+                            <input type="checkbox" id="setuju" name="setuju" style="width:16px;height:16px;margin-top:2px;cursor:pointer;accent-color:#1a3c6e;">
+                            <label for="setuju" style="font-size:13px;color:#475569;cursor:pointer;line-height:1.6;">Saya menyatakan bahwa semua informasi yang saya berikan adalah <strong>benar dan akurat</strong>. Saya memahami bahwa data palsu dapat mengakibatkan pembatalan lamaran atau pemutusan hubungan kerja.</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;">
+                    <button type="button" onclick="resetForm()" class="btn-secondary">
+                        <svg width="15" height="15" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" /></svg>
+                        Reset Form
+                    </button>
+                    <button type="button" onclick="openPrintModal()" class="btn-primary">
+                        <svg width="15" height="15" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M9 14h6M9 18h6" /></svg>
+                        Cetak / Download PDF
+                    </button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <script>
+        // ---------- Utility Functions ----------
+        function showToast(msg, duration = 3000) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        // ---------- Signature Toggle ----------
+        const sigBox = document.getElementById('sigBox');
+        const sigPlaceholder = document.getElementById('sig-placeholder');
+        const sigDone = document.getElementById('sig-done');
+        if(sigBox) {
+            sigBox.addEventListener('click', function() {
+                if (sigDone.style.display === 'none') {
+                    sigDone.style.display = 'flex';
+                    sigPlaceholder.style.display = 'none';
+                    this.style.borderColor = '#1a3c6e';
+                    this.style.background = '#f0f4ff';
+                } else {
+                    sigDone.style.display = 'none';
+                    sigPlaceholder.style.display = 'flex';
+                    this.style.borderColor = '';
+                    this.style.background = '';
+                }
+                updateProgress();
+            });
+        }
+
+        // ---------- Toggle Kasus Hukum ----------
+        function toggleKasusHukum(sel) {
+            const detailDiv = document.getElementById('kasus-detail');
+            if (detailDiv) detailDiv.style.display = sel.value === 'ya' ? 'block' : 'none';
+        }
+
+        // ---------- Progress Tracking ----------
+        const requiredFields = ['nama_lengkap','tempat_lahir','tanggal_lahir','jenis_kelamin','status_pernikahan','alamat','nomor_hp','email','nomor_ktp','kasus_hukum','bersedia_pindah','mulai_bekerja','alasan_melamar','tempat_ttd','tanggal_ttd','gaji_diharapkan'];
+        function updateProgress() {
+            let filled = 0;
+            requiredFields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.value && el.value.trim() !== '') filled++;
+            });
+            const setuju = document.getElementById('setuju')?.checked ? 1 : 0;
+            const total = requiredFields.length + 1;
+            const pct = Math.min(100, Math.round(((filled + setuju) / total) * 100));
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            if (progressBar) progressBar.style.width = pct + '%';
+            if (progressText) progressText.textContent = pct + '%';
+        }
+
+        document.querySelectorAll('.form-input, #setuju').forEach(el => {
+            el.addEventListener('input', updateProgress);
+            el.addEventListener('change', updateProgress);
+        });
+
+        // ---------- Dynamic Rows (Kerja & Referensi) ----------
+        function addKerjaRow() {
+            const tbody = document.getElementById('kerja-body');
+            const row = document.createElement('tr');
+            row.setAttribute('data-row','kerja');
+            row.innerHTML = `
+                <td><input class="form-input" type="text" name="kerja_perusahaan[]" placeholder="Nama perusahaan" /></td>
+                <td><input class="form-input" type="text" name="kerja_jabatan[]" placeholder="Jabatan" /></td>
+                <td><input class="form-input" type="month" name="kerja_masuk[]" /></td>
+                <td><input class="form-input" type="month" name="kerja_keluar[]" /></td>
+                <td><input class="form-input" type="text" name="kerja_alasan[]" placeholder="Alasan keluar" /></td>
+                <td style="text-align:center;"><button type="button" onclick="removeRow(this,'kerja-body')" style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:16px;padding:4px;">✕</button></td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        function addRefRow() {
+            const tbody = document.getElementById('ref-body');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input class="form-input" type="text" name="ref_nama[]" placeholder="Nama" /></td>
+                <td><input class="form-input" type="text" name="ref_jabatan[]" placeholder="Jabatan" /></td>
+                <td><input class="form-input" type="text" name="ref_perusahaan[]" placeholder="Perusahaan" /></td>
+                <td><input class="form-input" type="tel" name="ref_hp[]" placeholder="08xxxxxxxx" /></td>
+                <td><input class="form-input" type="text" name="ref_hubungan[]" placeholder="Rekan kerja, dll" /></td>
+                <td style="text-align:center;"><button type="button" onclick="removeRow(this,'ref-body')" style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:16px;padding:4px;">✕</button></td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        window.removeRow = function(btn, tbodyId) {
+            const tbody = document.getElementById(tbodyId);
+            if (tbody && tbody.rows.length <= 1) {
+                showToast('Minimal 1 baris harus ada.');
+                return;
+            }
+            const row = btn.closest('tr');
+            if(row) row.remove();
+        }
+
+        // ---------- Reset Form ----------
+        function resetForm() {
+            if (confirm('Apakah Anda yakin ingin mereset semua data form?')) {
+                document.getElementById('mainForm').reset();
+                // Reset signature
+                if(sigDone) sigDone.style.display = 'none';
+                if(sigPlaceholder) sigPlaceholder.style.display = 'flex';
+                if(sigBox) {
+                    sigBox.style.borderColor = '';
+                    sigBox.style.background = '';
+                }
+                document.getElementById('kasus-detail').style.display = 'none';
+                updateProgress();
+                showToast('Form telah direset.');
+            }
+        }
+
+        // ---------- Modal Control ----------
+        function openPrintModal() {
+            document.getElementById('printModal').classList.remove('hidden');
+        }
+        function closePrintModal() {
+            document.getElementById('printModal').classList.add('hidden');
+        }
+
+        // ---------- Data Collection for Print ----------
+        function getVal(id) {
+            const el = document.getElementById(id);
+            return el ? (el.value.trim() || '-') : '-';
+        }
+        function getSelectLabel(id) {
+            const el = document.getElementById(id);
+            if (!el) return '-';
+            const opt = el.options[el.selectedIndex];
+            return opt && opt.value ? (opt.text === '-- Pilih --' ? '-' : opt.text) : '-';
+        }
+
+        function buildPrintHTML() {
+            // Pendidikan
+            const pendidikan = [
+                { jenjang:'SD', nama: document.querySelector('[name=sd_nama]')?.value||'-', jurusan: document.querySelector('[name=sd_jurusan]')?.value||'-', masuk: document.querySelector('[name=sd_masuk]')?.value||'-', lulus: document.querySelector('[name=sd_lulus]')?.value||'-' },
+                { jenjang:'SMP', nama: document.querySelector('[name=smp_nama]')?.value||'-', jurusan: document.querySelector('[name=smp_jurusan]')?.value||'-', masuk: document.querySelector('[name=smp_masuk]')?.value||'-', lulus: document.querySelector('[name=smp_lulus]')?.value||'-' },
+                { jenjang:'SMA/SMK', nama: document.querySelector('[name=sma_nama]')?.value||'-', jurusan: document.querySelector('[name=sma_jurusan]')?.value||'-', masuk: document.querySelector('[name=sma_masuk]')?.value||'-', lulus: document.querySelector('[name=sma_lulus]')?.value||'-' },
+                { jenjang:'D3/S1', nama: document.querySelector('[name=d3s1_nama]')?.value||'-', jurusan: document.querySelector('[name=d3s1_jurusan]')?.value||'-', masuk: document.querySelector('[name=d3s1_masuk]')?.value||'-', lulus: document.querySelector('[name=d3s1_lulus]')?.value||'-' },
+                { jenjang:'S2/S3', nama: document.querySelector('[name=s2_nama]')?.value||'-', jurusan: document.querySelector('[name=s2_jurusan]')?.value||'-', masuk: document.querySelector('[name=s2_masuk]')?.value||'-', lulus: document.querySelector('[name=s2_lulus]')?.value||'-' },
+            ];
+
+            // Pengalaman Kerja
+            const kerjaRows = document.querySelectorAll('#kerja-body tr');
+            const kerjaData = [];
+            kerjaRows.forEach(r => {
+                kerjaData.push({
+                    perusahaan: r.querySelector('[name="kerja_perusahaan[]"]')?.value||'-',
+                    jabatan: r.querySelector('[name="kerja_jabatan[]"]')?.value||'-',
+                    masuk: r.querySelector('[name="kerja_masuk[]"]')?.value||'-',
+                    keluar: r.querySelector('[name="kerja_keluar[]"]')?.value||'-',
+                    alasan: r.querySelector('[name="kerja_alasan[]"]')?.value||'-',
+                });
+            });
+
+            // Referensi
+            const refRows = document.querySelectorAll('#ref-body tr');
+            const refData = [];
+            refRows.forEach(r => {
+                refData.push({
+                    nama: r.querySelector('[name="ref_nama[]"]')?.value||'-',
+                    jabatan: r.querySelector('[name="ref_jabatan[]"]')?.value||'-',
+                    perusahaan: r.querySelector('[name="ref_perusahaan[]"]')?.value||'-',
+                    hp: r.querySelector('[name="ref_hp[]"]')?.value||'-',
+                    hubungan: r.querySelector('[name="ref_hubungan[]"]')?.value||'-',
+                });
+            });
+
+            const companyName = (window.elementSdk?.config?.company_name_label) || '';
+            const formTitle = (window.elementSdk?.config?.form_title) || 'FORM BIODATA CALON KARYAWAN';
+            const kasusHukum = getSelectLabel('kasus_hukum');
+            const kasusJelaskan = (kasusHukum === 'Ya') ? getVal('kasus_penjelasan') : '-';
+
+            return `<!DOCTYPE html>
+            <html lang="id">
+            <head>
+                <meta charset="UTF-8">
+                <title>${formTitle} - Cetak</title>
+                <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body { font-family: 'Plus Jakarta Sans', sans-serif; background: white; color: #1e293b; font-size: 10pt; }
+                    @media print {
+                        .no-print { display: none !important; }
+                        body { margin: 0; padding: 0; }
+                        .page { padding: 10mm; }
+                    }
+                    .page { max-width: 210mm; margin: 0 auto; padding: 15mm; }
+                    .print-bar { background: #1a3c6e; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; color: white; }
+                    .print-btn { background: #e8b84b; color: #1a3c6e; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: inherit; }
+                    .doc-header { text-align: center; border-bottom: 3px solid #1a3c6e; padding-bottom: 12px; margin-bottom: 20px; }
+                    .doc-header h1 { font-size: 18pt; color: #1a3c6e; }
+                    .section { margin-bottom: 16px; }
+                    .sec-title { background: #1a3c6e; color: white; padding: 6px 12px; font-weight: 700; font-size: 11pt; }
+                    .sec-body { border: 1.5px solid #cbd5e1; border-top: none; padding: 12px 15px; }
+                    .field-row { display: flex; margin-bottom: 5px; }
+                    .field-label { min-width: 170px; font-weight: 600; color: #475569; }
+                    .field-colon { width: 20px; }
+                    .field-value { flex: 1; border-bottom: 1px dotted #cbd5e1; }
+                    .data-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+                    .data-table th, .data-table td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; vertical-align: top; }
+                    .data-table th { background: #f1f5f9; font-size: 9pt; }
+                    .sig-grid { display: flex; justify-content: space-between; margin-top: 20px; gap: 30px; }
+                    .sig-line { border-bottom: 1.5px solid #1e293b; height: 60px; margin-top: 6px; width: 220px; }
+                    .stmt-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; margin-bottom: 16px; font-style: italic; }
+                    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+                </style>
+            </head>
+            <body>
+                <div class="no-print print-bar">
+                    <span>📄 Form Biodata Calon Karyawan</span>
+                    <div><button class="print-btn" onclick="window.print()">🖨️ Cetak / Save as PDF</button> <button class="print-btn" onclick="window.close()" style="background:white;">Tutup</button></div>
+                </div>
+                <div class="page">
+                    <div class="doc-header">
+                        ${companyName ? `<p style="font-size:12pt;font-weight:700;">${companyName}</p>` : ''}
+                        <h1>${formTitle}</h1>
+                        <p>Data yang diisi adalah benar dan dapat dipertanggungjawabkan</p>
+                    </div>
+
+                    <!-- A. Data Diri -->
+                    <div class="section"><div class="sec-title">A. DATA DIRI</div><div class="sec-body">
+                        <div class="grid-2">
+                            <div><div class="field-row"><span class="field-label">Nama Lengkap</span><span class="field-colon">:</span><span class="field-value">${getVal('nama_lengkap')}</span></div>
+                            <div class="field-row"><span class="field-label">Tempat Lahir</span><span class="field-colon">:</span><span class="field-value">${getVal('tempat_lahir')}</span></div>
+                            <div class="field-row"><span class="field-label">Tanggal Lahir</span><span class="field-colon">:</span><span class="field-value">${getVal('tanggal_lahir')}</span></div>
+                            <div class="field-row"><span class="field-label">Jenis Kelamin</span><span class="field-colon">:</span><span class="field-value">${getSelectLabel('jenis_kelamin')}</span></div>
+                            <div class="field-row"><span class="field-label">Status Nikah</span><span class="field-colon">:</span><span class="field-value">${getSelectLabel('status_pernikahan')}</span></div>
+                            <div class="field-row"><span class="field-label">Agama</span><span class="field-colon">:</span><span class="field-value">${getSelectLabel('agama')}</span></div></div>
+                            <div><div class="field-row"><span class="field-label">Kewarganegaraan</span><span class="field-colon">:</span><span class="field-value">${getVal('kewarganegaraan')}</span></div>
+                            <div class="field-row"><span class="field-label">Nomor KTP</span><span class="field-colon">:</span><span class="field-value">${getVal('nomor_ktp')}</span></div>
+                            <div class="field-row"><span class="field-label">Nomor HP</span><span class="field-colon">:</span><span class="field-value">${getVal('nomor_hp')}</span></div>
+                            <div class="field-row"><span class="field-label">Email</span><span class="field-colon">:</span><span class="field-value">${getVal('email')}</span></div></div>
+                        </div>
+                        <div class="field-row"><span class="field-label">Alamat</span><span class="field-colon">:</span><span class="field-value">${getVal('alamat')}</span></div>
+                    </div></div>
+
+                    <!-- B. Pendidikan -->
+                    <div class="section"><div class="sec-title">B. RIWAYAT PENDIDIKAN</div><div class="sec-body"><table class="data-table"><thead><tr><th>Jenjang</th><th>Nama Institusi</th><th>Jurusan</th><th>Masuk</th><th>Lulus</th></tr></thead><tbody>${pendidikan.map(p => `<tr><td><strong>${p.jenjang}</strong></td><td>${p.nama}</td><td>${p.jurusan}</td><td>${p.masuk}</td><td>${p.lulus}</td></tr>`).join('')}</tbody></table></div></div>
+
+                    <!-- C. Pengalaman Kerja -->
+                    <div class="section"><div class="sec-title">C. PENGALAMAN KERJA</div><div class="sec-body"><table class="data-table"><thead><tr><th>Perusahaan</th><th>Jabatan</th><th>Masuk</th><th>Keluar</th><th>Alasan</th></tr></thead><tbody>${kerjaData.map(k => `<tr><td>${k.perusahaan}</td><td>${k.jabatan}</td><td>${k.masuk}</td><td>${k.keluar}</td><td>${k.alasan}</td></tr>`).join('')}${kerjaData.length === 0 ? '<tr><td colspan="5" style="text-align:center;">-</td></tr>' : ''}</tbody></table></div></div>
+
+                    <!-- D. Keahlian -->
+                    <div class="section"><div class="sec-title">D. KEAHLIAN</div><div class="sec-body"><div class="field-row"><span class="field-label">Keahlian Utama</span><span class="field-colon">:</span><span class="field-value">${getVal('keahlian_utama')}</span></div><div class="field-row"><span class="field-label">Bahasa</span><span class="field-colon">:</span><span class="field-value">${getVal('kemampuan_bahasa')}</span></div><div class="field-row"><span class="field-label">Komputer</span><span class="field-colon">:</span><span class="field-value">${getVal('kemampuan_komputer')}</span></div><div class="field-row"><span class="field-label">Sertifikasi</span><span class="field-colon">:</span><span class="field-value">${getVal('sertifikasi')}</span></div></div></div>
+
+                    <!-- E. Gaji -->
+                    <div class="section"><div class="sec-title">E. INFORMASI GAJI</div><div class="sec-body"><div class="grid-2"><div><div class="field-row"><span class="field-label">Gaji Terakhir</span><span class="field-colon">:</span><span class="field-value">${getVal('gaji_terakhir')}</span></div><div class="field-row"><span class="field-label">Tunjangan</span><span class="field-colon">:</span><span class="field-value">${getVal('tunjangan')}</span></div></div><div><div class="field-row"><span class="field-label">Gaji Diharapkan</span><span class="field-colon">:</span><span class="field-value">${getVal('gaji_diharapkan')}</span></div></div></div><div class="field-row"><span class="field-label">Alasan Gaji</span><span class="field-colon">:</span><span class="field-value">${getVal('alasan_gaji')}</span></div></div></div>
+
+                    <!-- F. Referensi -->
+                    <div class="section"><div class="sec-title">F. REFERENSI</div><div class="sec-body"><table class="data-table"><thead><tr><th>Nama</th><th>Jabatan</th><th>Perusahaan</th><th>No HP</th><th>Hubungan</th></tr></thead><tbody>${refData.map(r => `<tr><td>${r.nama}</td><td>${r.jabatan}</td><td>${r.perusahaan}</td><td>${r.hp}</td><td>${r.hubungan}</td></tr>`).join('')}</tbody></table></div></div>
+
+                    <!-- G. Informasi Tambahan -->
+                    <div class="section"><div class="sec-title">G. INFORMASI TAMBAHAN</div><div class="sec-body"><div class="field-row"><span class="field-label">Kasus Hukum</span><span class="field-colon">:</span><span class="field-value">${kasusHukum}</span></div>${kasusHukum === 'Ya' ? `<div class="field-row"><span class="field-label">Penjelasan</span><span class="field-colon">:</span><span class="field-value">${kasusJelaskan}</span></div>` : ''}<div class="field-row"><span class="field-label">Bersedia Pindah Unit</span><span class="field-colon">:</span><span class="field-value">${getSelectLabel('bersedia_pindah')}</span></div><div class="field-row"><span class="field-label">Mulai Bekerja</span><span class="field-colon">:</span><span class="field-value">${getVal('mulai_bekerja')}</span></div><div class="field-row"><span class="field-label">Alasan Melamar</span><span class="field-colon">:</span><span class="field-value">${getVal('alasan_melamar')}</span></div></div></div>
+
+                    <!-- H. Pernyataan -->
+                    <div class="section"><div class="sec-title">H. PERNYATAAN</div><div class="sec-body"><div class="stmt-box">"Saya menyatakan bahwa seluruh data yang saya isi adalah benar dan dapat dipertanggungjawabkan. Apabila di kemudian hari ditemukan ketidaksesuaian data, saya bersedia menerima konsekuensi sesuai ketentuan yang berlaku."</div><div class="sig-grid"><div><div class="field-row"><span class="field-label">Tempat</span><span class="field-colon">:</span><span class="field-value">${getVal('tempat_ttd')}</span></div><div class="field-row"><span class="field-label">Tanggal</span><span class="field-colon">:</span><span class="field-value">${getVal('tanggal_ttd')}</span></div></div><div><p style="font-size:9pt;">Yang menyatakan,</p><div class="sig-line"></div><div class="sig-name" style="font-weight:700;">${getVal('signature_name')}</div></div></div></div></div>
+                </div>
+                <script>window.addEventListener('load', () => setTimeout(() => window.print(), 500));<\/script>
+            </body>
+            </html>`;
+        }
+
+        window.executePrint = function() {
+            closePrintModal();
+            const printHtml = buildPrintHTML();
+            const win = window.open('', '_blank');
+            if (win) {
+                win.document.write(printHtml);
+                win.document.close();
+            } else {
+                showToast('Pop-up diblokir browser. Izinkan pop-up dan coba lagi.');
+            }
+        }
+
+        // SDK Init (optional, but ensures compatibility)
+        window.elementSdk && window.elementSdk.init({
+            defaultConfig: { company_name_label: '', form_title: 'FORM BIODATA CALON KARYAWAN', font_family: 'Plus Jakarta Sans' },
+            onConfigChange: (cfg) => {
+                if(document.getElementById('main-title')) document.getElementById('main-title').innerText = cfg.form_title || 'FORM BIODATA CALON KARYAWAN';
+                if(document.getElementById('company-name')) document.getElementById('company-name').innerText = cfg.company_name_label || 'Lengkapi semua bagian dengan data yang benar dan akurat';
+            }
+        });
+        updateProgress();
+    </script>
+</body>
+</html>
